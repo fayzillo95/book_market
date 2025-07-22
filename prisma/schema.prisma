@@ -1,0 +1,84 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                 @id @default(autoincrement())
+  fullName          String
+  email             String              @unique
+  borrows           Borrow[]
+  UserBorrowHistory UserBorrowHistory[]
+
+  @@map("users")
+}
+
+model Borrow {
+  id     Int  @id @default(autoincrement())
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  bookId Int  @map("book_id")
+  books  Book @relation(fields: [bookId], references: [id],onDelete: Cascade)
+
+  borrowDate  DateTime  @default(now()) @map("borrow_date")
+  returnDate  DateTime? @map("returning_date")
+  rating      Float?
+  isAvailable Boolean   @default(false) @map("is_available")
+
+  @@map("borrows")
+}
+
+model UserBorrowHistory {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  bookId Int
+  book   Book @relation(fields: [bookId], references: [id],onDelete: Cascade)
+
+  @@map("user_borrow_histories")
+}
+
+model Book {
+  id Int @id @default(autoincrement())
+
+  title         String
+  genre         String
+  publishedYear Int
+
+  availableCount    Int                 @default(0) @map("available_count")
+  borrowedCount     Int                 @default(0) @map("borrowed_count")
+  borrows           Borrow[]
+  UserBorrowHistory UserBorrowHistory[]
+  BookDetailes      BookAuthor[]
+
+  @@index([title, genre, id])
+  @@map("books")
+}
+
+model Author {
+  id       Int    @id @default(autoincrement())
+  fullName String @unique() @map("full_name")
+
+  BookDetailes BookAuthor[]
+
+  @@map("authors")
+}
+
+model BookAuthor {
+  id Int @id @default(autoincrement())
+
+  bookId Int
+  book   Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  authorId Int
+  author   Author @relation(fields: [authorId], references: [id])
+
+  @@map("book_detailes")
+}

@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  backend:
+    image: fayzillodeveloper/book_app:latest
+    container_name: backend
+    build: .
+    ports:
+      - "15976:15975"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - db
+    networks:
+      - backend
+    volumes:
+      - .:/app
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+
+  db:
+    container_name: postgres
+    image: postgres:15.2
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
