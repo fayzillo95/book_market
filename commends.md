@@ -1,18 +1,3 @@
-<!-- clear images  -->
-docker rmi -f $(docker images -q)
-
-<!-- clear containers all -->
-docker rm -f $(docker ps -aq)
-
-<!-- login adn push and pull  -->
-docker login
-docker pull mongo:7
-docker tag mongo:7 fayzillodeveloper/mongo:7
-
-<!-- build test -->
-docker compose up --build
-
-172 26 15 158
 
 
 Topshiriq: NestJS yordamida Kutubxon boshqaruv tizimi yaratish

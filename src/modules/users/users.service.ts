@@ -82,6 +82,7 @@ export class UsersService {
     };
   }
   async getBorrowHistories(id:number){
+    const {data : user} = await this.findById(id)
     const historiesBorrow = await this.prisma.userBorrowHistory.findMany({
       where : {userId : id},
       select : {
@@ -99,10 +100,15 @@ export class UsersService {
             id : true
           }
         },
-        user : true
       }
     })
-    return historiesBorrow
+    return {
+      messsage : `Read hitory succesfuly user by id : [ ${id} ]`,
+      succes : true,
+      data : {
+        user,historiesBorrow
+      }
+    }
   }
 
 }
