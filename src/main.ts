@@ -12,10 +12,14 @@ async function bootstrap() {
 
   const config = SwaggerModule.createDocument(app, document);
   SwaggerModule.setup('/api-docs', app, config);
+  
+  const HOST = process.env.HOST || "localhost"
+  const PORT = process.env.PORT ?? 3000
+  const BASE_URL = `http://${HOST}:${PORT}`
 
   await app.listen(process.env.PORT ?? 3000);
   console.log(
-    `Server is running ✅✅✅😁😁😁😁😁😁\n${process.env.BASE_URL}/api-docs`,
+    `Server is running ✅✅✅  \n${BASE_URL}/api-docs`,
   );
 }
 bootstrap();
