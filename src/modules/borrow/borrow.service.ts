@@ -1,18 +1,21 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateBorrowDto } from './dto/create-borrow.dto';
 import { PrismaService } from 'src/core/prisma/prisma.service';
 
 @Injectable()
 export class BorrowService {
   constructor(
-    private readonly prisama: PrismaService
-  ) { }
+    private readonly prisama: PrismaService,
+    private readonly logger : Logger
+  ) { 
+    this.logger = new Logger()
+  }
 
   async create(data: CreateBorrowDto) {
-    await this.checkingData(data.userId, data.bookId)
-    const book = await this.prisama.book.findFirst({ where: { id: data.bookId } })
-    if (!book) return
-    if (book.availableCount <= 0) {
+    const {user} = await this.checkingData(data.userId, data.bookId)
+    const bookBorrow = await this.prisama.book.findFirst({ where: { id: data.bookId } })
+    if (!bookBorrow) return
+    if (bookBorrow.availableCount <= 0) {
       throw new BadRequestException(`Book in library availableCount = 0 !`)
     }
     const newBorrow = await this.prisama.borrow.create({
@@ -24,11 +27,11 @@ export class BorrowService {
     })
     await this.prisama.book.update({
       where: {
-        id: book.id
+        id: data.bookId
       },
       data: {
-        availableCount: book.availableCount - 1,
-        borrowedCount: book.borrowedCount + 1
+        availableCount: bookBorrow.availableCount - 1,
+        borrowedCount: bookBorrow.borrowedCount + 1
       }
     })
     await this.prisama.userBorrowHistory.create({
@@ -37,6 +40,7 @@ export class BorrowService {
         userId : data.userId
       }
     })
+    this.logger.log(`Ijaraga olindi kitob : [${bookBorrow.title}] User : [${user.fullName}]`)
     return {
       message: 'This action adds a new borrow',
       succes: true,
@@ -66,6 +70,7 @@ export class BorrowService {
     if (oldBorrow) {
       throw new BadRequestException(`Bu kitob oldin ${user.fullName} ga ${oldBorrow.borrowDate} da berilgan va qaytarilmagan !`)
     }
+    
     return { user, book }
   }
   async findAll() {
@@ -112,6 +117,7 @@ export class BorrowService {
       },
       include: { books: true }
     })
+    this.logger.log(`[${book.title}] kitobi kutubxonaga qaytarildi `)
     return {
       message: `This action updates a #${id} borrow`,
       succes: true,
